@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Мини‑приложение</title>
+  </head>
+  <body>
+    <h1>Мини‑приложение</h1>
+    <p id="info"></p>
+    <button id="here">Я здесь</button>
+    
+    <script>
+      // читаем параметры из строки запроса
+      function qs() {
+        const params = new URLSearchParams(location.search);
+        const out = {};
+        for (const [k, v] of params.entries()) out[k] = v;
+        return out;
+      }
+
+      const params = qs();
+      const info = document.getElementById('info');
+      info.textContent = `Вы вошли как ${params.username || 'неизвестный'} (tg:${params.tg_id})`;
+
+      document.getElementById('here').addEventListener('click', async () => {
+        const payload = {
+          tg_id: params.tg_id,
+          chat_id: params.chat_id,
+          username: params.username,
+        };
+
+        try {
+          const res = await fetch('/present', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const j = await res.json();
+          if (j.status === 'ok') {
+            alert('Отправлено в чат.');
+          } else {
+            alert('Ошибка: ' + (j.error || JSON.stringify(j)));
+          }
+        } catch (e) {
+          alert('Ошибка сети: ' + e);
+        }
+      });
+    </script>
+  </body>
+</html>
