@@ -15,9 +15,16 @@
         const id = params.get("id");
         const username = params.get("username");
         const name = params.get("name");
+        const avatar = params.get("avatar");
 
         // формируем HTML
-        document.getElementById("profile").innerHTML = '< img src = "https://t.me/i/userpic/320/${id}.jpg" width = "100" height = "100"alt = "Аватар" > <h2 > $ {name}(ID: $ {id}) < /h2> <p > Имя пользователя: @$ {username || "Не указано"} < /p>';
+        document.getElementById("profile").innerHTML = `
+            <h1>Профиль пользователя</h1>
+            <p>ID: ${id}</p>
+            <p>Имя пользователя: ${username}</p>
+            <p>Имя: ${name}</p>
+            <img src="${avatar}" alt="Аватар" style="width: 100px; height: 100px;">
+        `;
     </script>
 </body>
 
