@@ -25,5 +25,5 @@ window.onload = function() {
         document.getElementById("app").classList.remove("hidden");
         loadProfile();
         tg.expand();
-    }, 5000); // 5 сек задержка для красоты
+    }, 1.5); // 1.5 сек задержка для красоты
 };
