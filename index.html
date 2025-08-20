@@ -55,7 +55,7 @@
 
          
         if (user) {   
-            container.innerHTML = '< img src = "https://t.me/i/userpic/320/${user.id}.jpg wigth = "100" height = "100" alt = "Аватар"> <h2>${user.first_name} ${user.last_name || ""}</h2> <p>ID: ${user.id}</p> <p>Имя пользователя: @${user.username || "Не указано"}</p>';
+            container.innerHTML = '< img src = "https://t.me/i/userpic/320/${user.id}.jpg" wigth = "100" height = "100" alt = "Аватар"> <h2>${user.first_name} ${user.last_name || ""}</h2> <p>ID: ${user.id}</p> <p>Имя пользователя: @${user.username || "Не указано"}</p>';
         } else {   
             container.innerHTML = "<p>Нет данных от Telegram ⚠️</p>"; 
         }
