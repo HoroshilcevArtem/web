@@ -1,88 +1,80 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Моё мини-приложение</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f4f6fa;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            margin-top: 50px;
+            padding: 20px;
+            background: white;
+            display: inline-block;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        img {
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+        
+        h2 {
             margin: 0;
         }
-        .card {
-            background: #fff;
-            padding: 20px 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        img, .avatar-placeholder {
-            border-radius: 50%;
-            margin-top: 10px;
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-        }
-        .avatar-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 40px;
-            font-weight: bold;
+        
+        p {
+            margin: 5px 0;
+            color: #555;
         }
     </style>
 </head>
+
 <body>
-    <div class="card" id="userCard">
-        <h2>Загрузка...</h2>
+    <div class="container">
+        <p>Загрузка...</p>
     </div>
 
     <script>
-        // Читаем параметры из URL
-        const params = new URLSearchParams(window.location.search);
-        const userId = params.get("id");
-        const username = params.get("username") || "без username";
-        const name = params.get("name") || "";
-        const avatar = params.get("avatar");
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // развернуть на весь экран
 
-        function getInitials(name) {
-            if (!name) return "👤";
-            return name.split(" ").map(word => word[0].toUpperCase()).join("").slice(0,2);
-        }
+        const user = tg.initDataUnsafe ? .user;
 
-        // Цвет всегда один и тот же для одинакового ID
-        function getColorById(id) {
-            const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#FFA726","#66BB6A","#9575CD","#F06292"];
-            let hash = 0;
-            for (let i = 0; i < id.length; i++) {
-                hash = id.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            return colors[Math.abs(hash) % colors.length];
-        }
-
-        if (userId) {
-            document.getElementById("userCard").innerHTML = 
-                <h2>${name}</h2>
-                <p>@${username}</p>
-                <p>ID: ${userId}</p>
-                ${avatar 
-                    ? <img src="${avatar}" alt="avatar"/> 
-                    : <div class="avatar-placeholder" style="background:${getColorById(userId)}">${getInitials(name)}</div>
+        if (user) {
+            const container = document.querySelector(".container");
+            container.innerHTML = <
+                img src = "https://t.me/i/userpic/320/${user.id}.jpg"
+            width = "100"
+            height = "100"
+            alt = "avatar" >
+                <
+                h2 > $ {
+                    user.first_name
                 }
-            ;
+            $ {
+                user.last_name || ""
+            } < /h2> <
+            p > @$ {
+                    user.username || "без username"
+                } < /p> <
+                p > ID: $ {
+                    user.id
+                } < /p>;
         } else {
-            document.getElementById("userCard").innerHTML = 
-                <p>❌ Данные не переданы</p>
-                <p>Открой сайт через кнопку в Telegram!</p>
-            ;
+            document.querySelector(".container").innerHTML = "<p>Не удалось получить данные пользователя ⚠️</p>";
         }
     </script>
 </body>
+
 </html>
