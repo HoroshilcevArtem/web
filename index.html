@@ -3,27 +3,47 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Cobra</title>
+    <title>Мини-приложение</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f9f9f9;
+        }
+        
+        #profile {
+            margin-top: 50px;
+        }
+        
+        img {
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 
 <body>
-    <!-- Экран загрузки -->
-    <div id="loader">
-        <div class="spinner"></div>
-    </div>
+    <div id="profile">Загрузка...</div>
 
-    <!-- Основной интерфейс -->
-    <div id="app" class="hidden">
-        <header>
-            <h1>Моё мини-приложение</h1>
-        </header>
+    <script>
+        // Берём данные от Telegram
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
 
-        <div id="profile"></div>
-    </div>
+        if (user) {
+            document.getElementById("profile").innerHTML =
+                '<img src="' + (user.photo_url || "https://t.me/i/userpic/320/" + user.id + ".jpg") + '" ' +
+                'width="120" height="120" alt="Аватар">' +
+                '<h2>' + user.first_name + ' (ID: ' + user.id + ')</h2>' +
+                '<p>Имя пользователя: @' + (user.username || "Не указано") + '</p>';
+        } else {
+            document.getElementById("profile").innerText = "Данные пользователя не найдены.";
+        }
 
-    <script src="script.js"></script>
+        // Растянуть мини-приложение на весь экран
+        tg.expand();
+    </script>
 </body>
 
 </html>
