@@ -3,62 +3,21 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-        }
-        
-        .container {
-            margin-top: 50px;
-            padding: 20px;
-            background: white;
-            display: inline-block;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        img {
-            border-radius: 50%;
-            margin-bottom: 15px;
-        }
-        
-        h2 {
-            margin: 0;
-        }
-        
-        p {
-            margin: 5px 0;
-            color: #555;
-        }
-    </style>
+    <title>Мини-приложение</title>
 </head>
 
 <body>
-    <div class="container">
-        <p>Загрузка...</p>
-    </div>
+    <div id="profile"></div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        const tg = window.Telegram.WebApp; 
-        tg.expand(); // разворачиваем на весь экран
+        // получаем параметры из URL
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        const username = params.get("username");
+        const name = params.get("name");
 
-         
-        const user = tg.initDataUnsafe.user; 
-        const container = document.querySelector(".container");
-
-         
-        if (user) {   
-            container.innerHTML = '< img src = "https://t.me/i/userpic/320/${user.id}.jpg" wigth = "100" height = "100" alt = "Аватар"> <h2>${user.first_name} ${user.last_name || ""}</h2> <p>ID: ${user.id}</p> <p>Имя пользователя: @${user.username || "Не указано"}</p>';
-        } else {   
-            container.innerHTML = "<p>Нет данных от Telegram ⚠️</p>"; 
-        }
+        // формируем HTML
+        document.getElementById("profile").innerHTML = '< img src = "https://t.me/i/userpic/320/${id}.jpg" width = "100" height = "100"alt = "Аватар" > <h2 > $ {name}(ID: $ {id}) < /h2> <p > Имя пользователя: @$ {username || "Не указано"} < /p>';
     </script>
 </body>
 
