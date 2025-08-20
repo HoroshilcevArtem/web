@@ -30,7 +30,9 @@
         // Берём данные от Telegram
         const tg = window.Telegram.WebApp;
         const user = tg.initDataUnsafe.user;
-        const balance = newURLSearchParams(window.location.search).get('balance');
+
+        // Берём баланс из URL
+        const balance = new URLSearchParams(window.location.search).get("balance");
 
         if (user) {
             document.getElementById("profile").innerHTML =
@@ -46,6 +48,7 @@
         // Растянуть мини-приложение на весь экран
         tg.expand();
     </script>
+
 </body>
 
 </html>
