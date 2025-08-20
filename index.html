@@ -1,75 +1,144 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Мини-приложение</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    :root {
+      --bg: #f6f6f6;
+      --fg: #111;
+      --card: #fff;
+      --muted: #666;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 24px;
     }
     .card {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      text-align: center;
-      max-width: 300px;
       width: 100%;
+      max-width: 360px;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+      padding: 24px;
+      text-align: center;
     }
-    img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      margin-bottom: 15px;
+    .avatar {
+      width: 120px; height: 120px; border-radius: 999px;
+      object-fit: cover; display: block; margin: 0 auto 16px;
+      background: #ddd;
     }
-    h2 {
-      margin: 5px 0;
-    }
-    p {
-      margin: 2px 0;
-      color: #555;
-    }
+    h2 { margin: 0 0 6px; font-size: 22px; }
+    p  { margin: 4px 0; color: var(--muted); }
+    .hint { margin-top: 16px; font-size: 13px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <img id="avatar" src="" alt="Avatar">
-    <h2 id="name"></h2>
+    <img id="avatar" class="avatar" alt="avatar" />
+    <h2 id="name">Загрузка…</h2>
     <p id="username"></p>
     <p id="userid"></p>
+    <p id="warning" class="hint" style="display:none">
+      Откройте эту страницу через кнопку в Telegram, либо передайте параметры в ссылке.
+    </p>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачивает на весь экран
-
-    const user = tg.initDataUnsafe.user;
-
-    if (user) {
-      document.getElementById("name").innerText =
-        ${user.first_name || ""} ${user.last_name || ""}.trim();
-
-      document.getElementById("username").innerText =
-        user.username ? "@" + user.username : "без username";
-
-      document.getElementById("userid").innerText =
-        "ID: " + user.id;
-
-      // аватарка (если есть)
-      const avatar = document.getElementById("avatar");
-      avatar.src = https://t.me/i/userpic/320/${user.username}.jpg;
-      avatar.onerror = () => avatar.src = "https://via.placeholder.com/100?text=No+Photo";
-    } else {
-      document.querySelector(".card").innerHTML = "<p>Нет данных о пользователе</p>";
+    // Util: читаем параметры из URL как fallback
+    function getParams() {
+      const qs = new URLSearchParams(location.search);
+      const safe = s => (s ?? "").toString();
+      return {
+        id: safe(qs.get("id") || qs.get("user_id")),
+        first_name: safe(qs.get("first_name") || qs.get("name")),
+        last_name: safe(qs.get("last_name")),
+        username: safe(qs.get("username")),
+        photo_url: safe(qs.get("photo_url")),
+      };
     }
+
+    function setThemeFromTelegram(tg) {
+      if (!tg?.themeParams) return;
+      const tp = tg.themeParams;
+      const cssVar = (k, v) => document.documentElement.style.setProperty(k, v);
+      // Нежно подстроимся под тёмную/светлую тему Telegram
+      if (tp.bg_color) cssVar("--bg", #${tp.bg_color});
+      if (tp.text_color) cssVar("--fg", #${tp.text_color});
+      if (tp.secondary_bg_color) cssVar("--card", #${tp.secondary_bg_color});
+      if (tp.hint_color) cssVar("--muted", #${tp.hint_color});
+    }
+
+    function fillUI({ id, first_name, last_name, username, photo_url }) {
+      const nameEl = document.getElementById("name");
+      const userEl = document.getElementById("username");
+      const idEl   = document.getElementById("userid");
+      const warnEl = document.getElementById("warning");
+      const avaEl  = document.getElementById("avatar");
+
+      // Имя (ID)
+      const fullName = [first_name, last_name].filter(Boolean).join(" ").trim() || (username ? @${username} : "Пользователь");
+      nameEl.textContent = ${fullName} (${id || "нет ID"});
+
+      // username строка
+      userEl.textContent = username ? @${username} : "без username";
+
+      // отдельная строка ID (если нужно)
+      idEl.textContent = id ? ID: ${id} : "";
+
+      // Аватарка: приоритет photo_url -> username -> плейсхолдер
+      const placeholder = "https://via.placeholder.com/120?text=No+Photo";
+      let src = photo_url || (username ? https://t.me/i/userpic/320/${encodeURIComponent(username)}.jpg : "");
+      avaEl.src = src || placeholder;
+      avaEl.onerror = () => { avaEl.src = placeholder; };
+
+      // Показать подсказку, если данных мало
+      if (!id) warnEl.style.display = "";
+    }
+
+    (function init() {
+      const tg = window.Telegram?.WebApp;
+      try {
+        tg?.expand();
+        tg?.ready();
+        setThemeFromTelegram(tg);
+      } catch (_) {}
+
+      let data = null;
+      // 1) Нативно из Telegram WebApp
+      const wUser = tg?.initDataUnsafe?.user;
+      if (wUser) {
+        data = {
+          id: String(wUser.id || ""),
+          first_name: wUser.first_name || "",
+          last_name: wUser.last_name || "",
+          username: wUser.username || "",
+          photo_url: wUser.photo_url || "",
+        };
+      }
+
+      // 2) Fallback из URL (если открыли в браузере)
+      if (!data || !data.id) {
+        const p = getParams();
+        data = {
+          id: String(p.id || ""),
+          first_name: p.first_name,
+          last_name: p.last_name,
+          username: p.username,
+          photo_url: p.photo_url,
+        };
+      }
+
+      fillUI(data);
+    })();
   </script>
 </body>
 </html>
