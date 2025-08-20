@@ -3,28 +3,46 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>123</title>
+    <title>Мини-приложение</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f9f9f9;
+        }
+        
+        #profile {
+            margin-top: 50px;
+        }
+        
+        img {
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 
 <body>
-    <div id="profile"></div>
+    <div id="profile">Загрузка...</div>
 
     <script>
-        // получаем параметры из URL
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get("id");
-        const username = params.get("username");
-        const name = params.get("name");
-        const avatar = params.get("avatar");
+        // Берём данные от Telegram
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
 
-        // формируем HTML
-        document.getElementById("profile").innerHTML = `
-            <h1>Профиль пользователя</h1>
-            <p>ID: ${id}</p>
-            <p>Имя пользователя: ${username}</p>
-            <p>Имя: ${name}</p>
-            <img src="${avatar}" alt="Аватар" style="width: 100px; height: 100px;">
-        `;
+        if (user) {
+            document.getElementById("profile").innerHTML =
+                '<img src="' + (user.photo_url || "https://t.me/i/userpic/320/" + user.id + ".jpg") + '" ' +
+                'width="120" height="120" alt="Аватар">' +
+                '<h2>' + user.first_name + ' (ID: ' + user.id + ')</h2>' +
+                '<p>Имя пользователя: @' + (user.username || "Не указано") + '</p>';
+        } else {
+            document.getElementById("profile").innerText = "Данные пользователя не найдены.";
+        }
+
+        // Растянуть мини-приложение на весь экран
+        tg.expand();
     </script>
 </body>
 
