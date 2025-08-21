@@ -50,10 +50,7 @@
     function renderProfile(balance) {
       if (user) {
         document.getElementById("profile").innerHTML =
-          '<img src="${user.photo_url || "https://t.me/i/userpic/320/" + user.id + ".jpg"}" width="120" height="120" alt="Аватар"> \
-           <h2>${user.first_name} (ID: ${user.id})</h2> \
-           <p>Имя пользователя: @${user.username || "Не указано"}</p> \
-           <p>Баланс: ${balance}</p>';
+          '<img src="${user.photo_url || "https://t.me/i/userpic/320/" + user.id + ".jpg"}" width="120" height="120" alt="Аватар"> <h2>${user.first_name} (ID: ${user.id})</h2> <p>Имя пользователя: @${user.username || "Не указано"}</p> <p>Баланс: ${balance}</p>';
       } else {
         document.getElementById("profile").innerText = "Данные пользователя не найдены.";
       }
