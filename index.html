@@ -2,72 +2,35 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Mini App</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
-    .header {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      align-items: center;
-      background: white;
-      padding: 8px 12px;
-      border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .header img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    .content {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-size: 22px;
-    }
-  </style>
+  <title>WebApp Test</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <div class="header" id="user-info">
-    <!-- Тут появится аватарка и ник -->
-  </div>
+  <h2>Тест мини-приложения</h2>
+  <div id="user-info"></div>
+  <button onclick="sendToBot()">Отправить боту</button>
 
-  <div class="content">
-    <button onclick="sendToBot()">Отправить в бота</button>
-  </div>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
 
+    // показать имя + аватар
     const user = tg.initDataUnsafe?.user;
     const userInfoDiv = document.getElementById("user-info");
 
     if (user) {
-      const avatar = user.photo_url
-        ? `<img src="${user.photo_url}" alt="avatar">`
-        : "";
+      const avatar = user.photo_url ? `<img src="${user.photo_url}" width="40" style="border-radius:50%;"> ` : "";
       const name = user.first_name || "Гость";
       userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
-
     } else {
       userInfoDiv.innerHTML = "<span>Гость</span>";
     }
 
+    // функция отправки данных в бота
     function sendToBot() {
-      alert('Нажата')
-      tg.sendData("123")
+      alert("Отправка данных...");
+      tg.sendData("Привет из WebApp 👋");
     }
-
   </script>
 </body>
 </html>
