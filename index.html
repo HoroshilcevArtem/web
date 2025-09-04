@@ -6,14 +6,14 @@
 	<title>Колесо фортуны</title>
 	<style>
 		body {
+			/* Черно-синий градиент */
 			font-family: Arial, Helvetica, sans-serif;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			min-height: 100vh;
 			height: 100vh;
-			background: linear-gradient(180deg,#0f1724,#071022);
-			color: #fff;
+			background: rgb(92, 91, 91);
 			margin: 0;
 			overflow: hidden;
 			position: fixed;
@@ -29,12 +29,56 @@
 			align-items: center;
 			justify-content: center;
 			position: relative;
+			padding: 20px;
+			box-sizing: border-box;
+			/* убираем borderGlow */
+			/* animation: borderGlow 8s ease-in-out infinite; */
 		}
 		.wheel-wrap {
 			position: relative;
 			width: 480px;
 			height: 480px;
 			margin: 20px auto;
+			background: transparent; /* убираем белый квадрат */
+			border-radius: 50%;
+			padding: 20px;
+			/* Мягкая RGB подсветка вокруг круга */
+			box-shadow:
+				0 0 180px 40px rgba(255,0,0,0.65),
+				0 0 320px 80px rgba(0,255,0,0.55),
+				0 0 480px 120px rgba(0,0,255,0.50),
+				0 0 80px 10px rgba(255,255,255,0.25);
+			animation: rgbGlow 4s linear infinite;
+		}
+		@keyframes rgbGlow {
+			0% {
+				box-shadow:
+					0 0 180px 40px rgba(255,0,0,0.65),
+					0 0 320px 80px rgba(0,255,0,0.55),
+					0 0 480px 120px rgba(0,0,255,0.50),
+					0 0 80px 10px rgba(255,255,255,0.25);
+			}
+			33% {
+				box-shadow:
+					0 0 180px 40px rgba(0,255,0,0.65),
+					0 0 320px 80px rgba(0,0,255,0.55),
+					0 0 480px 120px rgba(255,0,0,0.50),
+					0 0 80px 10px rgba(255,255,255,0.25);
+			}
+			66% {
+				box-shadow:
+					0 0 180px 40px rgba(0,0,255,0.65),
+					0 0 320px 80px rgba(255,0,0,0.55),
+					0 0 480px 120px rgba(0,255,0,0.50),
+					0 0 80px 10px rgba(255,255,255,0.25);
+			}
+			100% {
+				box-shadow:
+					0 0 180px 40px rgba(255,0,0,0.65),
+					0 0 320px 80px rgba(0,255,0,0.55),
+					0 0 480px 120px rgba(0,0,255,0.50),
+					0 0 80px 10px rgba(255,255,255,0.25);
+			}
 		}
 		canvas#wheel {
 			width: 100%;
@@ -45,7 +89,7 @@
 		}
 		.pointer {
 			position: absolute;
-			top: -8px;
+			top: 0px;
 			left: 50%;
 			transform: translateX(-50%) rotate(180deg);
 			width: 0;
@@ -112,7 +156,6 @@
 </head>
 <body>
 	<div class="container">
-		<h2>Колесо фортуны</h2>
 		<div class="wheel-wrap">
 			<div class="pointer" aria-hidden="true"></div>
 			<canvas id="wheel" width="480" height="480" role="img" aria-label="Колесо фортуны"></canvas>
@@ -270,13 +313,16 @@
 				wheelEl.removeEventListener('transitionend', onEnd);
 				spinning = false;
 				spinBtn.disabled = false;
-				// Надёжно определяем, какой сектор реально оказался у указателя
 				const landed = getLandedIndex(currentRotation);
- 				const won = segments[landed].isWin;
- 				resultText.textContent = won ? `Вы выиграли! Сектор ${segments[landed].label}` : `Увы, ${segments[landed].label} — не выигрышный сектор`;
- 			};
- 			wheelEl.addEventListener('transitionend', onEnd);
- 		}
+				const won = segments[landed].isWin;
+				// После выигрыша очищаем текст
+				if (won) {
+					resultText.textContent = '';
+				} else {
+                    resultText.textContent = '';				}
+			};
+			wheelEl.addEventListener('transitionend', onEnd);
+		}
  
  		spinBtn.addEventListener('click', spin);
  
