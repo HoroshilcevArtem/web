@@ -52,6 +52,19 @@
     <!-- Добавлен контейнер для логов -->
     <pre id="log" style="width:90%; max-width:720px; height:260px; overflow:auto; background:#f7f7f7; border:1px solid #ddd; padding:10px; margin-top:16px; font-size:13px;"></pre>
 
+    <!-- Добавлен блок инструкций и кнопка копирования (fallback) -->
+    <div id="instructions" style="width:90%; max-width:720px; margin-top:14px; text-align:left; font-size:14px; color:#222;">
+        <strong>Инструкции (важно):</strong>
+        <ol>
+            <li>Откройте мини‑приложение только через кнопку "Open WebApp" в сообщении бота (/test). Если вы открыли страницу напрямую — tg.sendData не доставит web_app_data боту.</li>
+            <li>Если web_app_data не дошёл, используйте кнопку "Копировать 1000" и вставьте это число в чат с ботом вручную (это поможет убедиться, что бот отвечает на значение 1000).</li>
+        </ol>
+        <div style="margin-top:8px;">
+            <button id="copyBtn" class="button" style="padding:6px 10px; font-size:14px;">Копировать 1000</button>
+            <span style="margin-left:10px; font-size:13px; color:#666;">Вставьте в чат с ботом и отправьте.</span>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
         const sendBtn = document.getElementById('sendBtn');
@@ -192,6 +205,20 @@
         if (isTelegram) {
             appendLog('info', 'Если бот не отвечает — нажмите кнопку "Открыть чат с ботом" и выполните /start в чате бота, затем повторите /test -> WebApp -> 1000.');
         }
+
+        // Кнопка копирования fallback
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText('1000');
+                appendLog('info', 'Скопировано в буфер: 1000. Вставьте и отправьте это сообщение в чат с ботом.');
+                statusDiv.innerText = 'Скопировано: 1000 — вставьте в чат с ботом и отправьте.';
+            } catch (err) {
+                appendLog('error', 'Не удалось скопировать:', err);
+                // fallback: выделить текст для копирования вручную
+                prompt('Скопируйте вручную текст:', '1000');
+            }
+        });
     </script>
 </body>
 </html>
