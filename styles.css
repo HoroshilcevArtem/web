@@ -1,0 +1,126 @@
+:root{
+	--size: 420px;
+	--count: 8;
+	--angle: calc(360deg / var(--count));
+	--accent: linear-gradient(135deg,#ff8a00,#e52e71);
+	--glass: rgba(255,255,255,0.06);
+}
+*{box-sizing:border-box}
+body{
+	height:100vh;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	background: radial-gradient(circle at 10% 10%, #0f172a 0%, #071022 35%, #02060a 100%);
+	color:#fff;
+	font-family: Inter, Roboto, system-ui, sans-serif;
+	margin:0;
+}
+.stage{display:flex;flex-direction:column;align-items:center;gap:18px;}
+.wheel-wrap{position:relative;width:var(--size);height:var(--size);display:flex;align-items:center;justify-content:center;}
+.wheel{
+	--count:8;
+	width:var(--size);
+	height:var(--size);
+	border-radius:50%;
+	position:relative;
+	box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 6px 30px rgba(255,255,255,0.02);
+	transition: transform 6s cubic-bezier(.12,.68,.28,1);
+	transform: rotate(0deg);
+	overflow:visible;
+}
+/* сектора: используем клип-пат для треугольного среза и вращаем каждое */
+.sector{
+	--count:8;
+	--angle:calc(360deg / var(--count));
+	position:absolute;
+	inset:0;
+	clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+	transform-origin: 50% 50%;
+	transform: rotate(calc(var(--i) * var(--angle))) translateZ(0);
+	/* градиенты для контраста */
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+	border: 1px solid rgba(255,255,255,0.04);
+}
+/* содержимое сектора (иконка + подпись) */
+.sector img{
+	position:absolute;
+	width:56px;
+	height:56px;
+	left:50%;
+	top:12%;
+	transform: translateX(-50%) rotate(calc(var(--i) * -1 * var(--angle)));
+	filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+}
+.sector span{
+	position:absolute;
+	left:50%;
+	top:64%;
+	transform: translateX(-50%) rotate(calc(var(--i) * -1 * var(--angle)));
+	font-weight:600;
+	font-size:14px;
+	letter-spacing:0.4px;
+	color:#fff;
+	text-shadow:0 2px 6px rgba(0,0,0,0.6);
+}
+/* тонкая разметка между секторами (радиальные линии) */
+.wheel::before{
+	content:"";
+	position:absolute;
+	inset:6%;
+	border-radius:50%;
+	background:conic-gradient(from 0deg, rgba(255,255,255,0.02), transparent 1%);
+	mix-blend-mode:overlay;
+}
+/* центр колеса */
+.wheel::after{
+	content:"";
+	position:absolute;
+	width:20%;
+	height:20%;
+	border-radius:50%;
+	left:40%;
+	top:40%;
+	background:var(--accent);
+	box-shadow:0 6px 24px rgba(229,46,113,0.2), inset 0 -6px 12px rgba(255,255,255,0.08);
+}
+/* указатель */
+.pointer{
+	position:absolute;
+	top:-14px;
+	left:50%;
+	transform:translateX(-50%);
+	width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:32px solid #ffecb3;
+	filter:drop-shadow(0 6px 16px rgba(0,0,0,0.6));
+	border-radius:2px;
+}
+/* controls */
+.controls{display:flex;gap:12px;align-items:center}
+#spinBtn{
+	background:linear-gradient(180deg,#ffb86b,#ff6b8a);
+	border:0;padding:12px 20px;border-radius:12px;font-weight:700;color:#09101a;
+	cursor:pointer;box-shadow:0 8px 30px rgba(255,107,138,0.12);
+	transition:transform .12s ease;user-select:none;
+}
+#spinBtn:active{transform:translateY(2px) scale(.995)}
+#spinBtn:disabled{opacity:.5;cursor:default;transform:none}
+.result{
+	background:rgba(255,255,255,0.04);padding:10px 14px;border-radius:10px;font-weight:600;
+	box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+}
+/* эффект при вращении */
+.wheel.spinning{
+	animation: vibe 0.9s infinite linear;
+}
+@keyframes vibe{
+	0%{filter: drop-shadow(0 8px 30px rgba(0,0,0,0.7))}
+	50%{filter: drop-shadow(0 10px 40px rgba(0,0,0,0.85))}
+	100%{filter: drop-shadow(0 8px 30px rgba(0,0,0,0.7))}
+}
+
+/* canvas confetti occupies whole screen */
+#confetti{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:40}
+@media (max-width:480px){
+	:root{--size:300px}
+	.sector img{width:44px;height:44px}
+}

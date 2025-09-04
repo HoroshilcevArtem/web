@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Колесо удачи</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="stage">
+		<div class="wheel-wrap">
+			<div id="wheel" class="wheel" style="--count:8;">
+				<!-- 8 секторов: каждая секция содержит картинку (inline SVG) и подпись -->
+				<div class="sector" style="--i:0;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="40" text-anchor="middle" dominant-baseline="middle">⭐</text></svg>' alt="">
+					<span>Звезда</span>
+				</div>
+				<div class="sector" style="--i:1;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">🎁</text></svg>' alt="">
+					<span>Подарок</span>
+				</div>
+				<div class="sector" style="--i:2;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">💰</text></svg>' alt="">
+					<span>Монеты</span>
+				</div>
+				<div class="sector" style="--i:3;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">💎</text></svg>' alt="">
+					<span>Алмаз</span>
+				</div>
+				<div class="sector" style="--i:4;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">❤️</text></svg>' alt="">
+					<span>Любовь</span>
+				</div>
+				<div class="sector" style="--i:5;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">🏆</text></svg>' alt="">
+					<span>Трофей</span>
+				</div>
+				<div class="sector" style="--i:6;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">🚀</text></svg>' alt="">
+					<span>Ракета</span>
+				</div>
+				<div class="sector" style="--i:7;">
+					<img src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="50%" y="55%" font-size="36" text-anchor="middle" dominant-baseline="middle">🎉</text></svg>' alt="">
+					<span>Сюрприз</span>
+				</div>
+			</div>
+
+			<div class="pointer"></div>
+		</div>
+
+		<div class="controls">
+			<button id="spinBtn">Крутить</button>
+			<div id="result" class="result">Нажмите «Крутить»</div>
+		</div>
+	</div>
+
+	<canvas id="confetti"></canvas>
+
+	<script src="script.js"></script>
+</body>
+</html>
