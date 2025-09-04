@@ -314,7 +314,7 @@
 			// pointer находится сверху (90° в градусах от вправо — но по часовой: 270°).
 			// Чтобы центр сектора оказался у указателя сверху, нужно повернуть колесо на:
 			// rotateDeg = 270 - centreAngleDeg, плюс дополнительные полные обороты.
-			const spins = 5 + Math.floor(Math.random()*3); // сколько целых оборотов
+			const spins = 15 + Math.floor(Math.random()*3); // сколько целых оборотов
 			// небольшой рандом внутри сектора чтобы не попадать строго в центр:
 			const margin = Math.max(0, anglePer - 8);
 			const randomOffset = (Math.random() - 0.5) * margin;
