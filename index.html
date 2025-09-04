@@ -159,33 +159,38 @@
             }
         }
 
-        // Настройка кнопки открытия чата
-        const BOT_USERNAME = "REPLACE_WITH_BOT_USERNAME"; // <- замените на имя вашего бота
+        // Обновить кнопку открытия чата: подставьте username бота ниже
+        const BOT_USERNAME = "huila_pedro_bot";
         const openChatBtn = document.getElementById('openChatBtn');
         const openChatLink = document.getElementById('openChatLink');
-        if (!BOT_USERNAME || BOT_USERNAME === "REPLACE_WITH_BOT_USERNAME") {
+        if (!BOT_USERNAME) {
             openChatBtn.disabled = true;
             openChatLink.href = "https://t.me/";
-            appendLog('warn', 'Замените BOT_USERNAME в index.html на имя вашего бота, чтобы открыть чат из мини-приложения.');
+            appendLog('warn', 'Укажите BOT_USERNAME в index.html, чтобы открыть чат из мини‑приложения.');
         } else {
             openChatLink.href = `https://t.me/${BOT_USERNAME}`;
             openChatBtn.addEventListener('click', () => {
-                appendLog('info', 'Попытка открыть чат с ботом через tg.openTelegramLink...');
-                // Попробуем открыть через WebApp API, если доступно
+                appendLog('info', 'Попытка открыть чат с ботом через tg.openTelegramLink или ссылку с ?start=');
+                const startPayload = 'from_webapp';
+                const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(startPayload)}`;
                 try {
                     if (tg && typeof tg.openTelegramLink === 'function') {
-                        tg.openTelegramLink(`https://t.me/${BOT_USERNAME}`);
-                        appendLog('info', 'Вызван tg.openTelegramLink');
+                        tg.openTelegramLink(url);
+                        appendLog('info', 'Вызван tg.openTelegramLink', url);
                     } else {
-                        // fallback: открываем через window.open
-                        window.open(`https://t.me/${BOT_USERNAME}`, '_blank');
-                        appendLog('info', 'Открыт https://t.me/... в новом окне (fallback)');
+                        window.open(url, '_blank');
+                        appendLog('info', 'Открыт URL в новом окне (fallback):', url);
                     }
                 } catch (err) {
                     appendLog('error', 'Ошибка при открытии чата:', err);
-                    window.open(`https://t.me/${BOT_USERNAME}`, '_blank');
+                    window.open(url, '_blank');
                 }
             });
+        }
+
+        // Подсказка в UI, чтобы пользователь нажал /start в чате бота
+        if (isTelegram) {
+            appendLog('info', 'Если бот не отвечает — нажмите кнопку "Открыть чат с ботом" и выполните /start в чате бота, затем повторите /test -> WebApp -> 1000.');
         }
     </script>
 </body>
