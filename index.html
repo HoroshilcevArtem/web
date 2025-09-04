@@ -41,7 +41,7 @@
   </div>
 
   <div class="content">
-    Контент сайта
+    <button onclick="sendToBot()">Отправить в бота</button>
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -58,6 +58,11 @@
         : "";
       const name = user.first_name || "Гость";
       userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
+    
+      function sendToBot() {
+      const tg = window.Telegram.WebApp;
+      tg.sendData("Привет из сайта 👋");}
+
     } else {
       userInfoDiv.innerHTML = "<span>Гость</span>";
     }
