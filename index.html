@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
     <title>Игровой Автомат</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -48,5 +49,224 @@
 
     </main>
     <script src="js/script.js"></script>
+=======
+    <title>Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        /* Добавлены стили для логов */
+        #log {
+            width: 90%;
+            max-width: 720px;
+            height: 260px;
+            overflow: auto;
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <button class="button" id="sendBtn" onclick="sendToBot('1000')">1000</button>
+    <div id="status"></div>
+
+    <!-- Кнопка / ссылка для открытия чата с ботом -->
+    <div style="margin-top:12px;">
+        <!-- Замените BOT_USERNAME на реальное имя вашего бота (без @) -->
+        <button id="openChatBtn" class="button" style="padding:6px 12px; font-size:14px;">Открыть чат с ботом</button>
+        <a id="openChatLink" href="https://t.me/huila_pedro_bot" target="_blank" style="margin-left:10px; font-size:13px;">Открыть в браузере</a>
+    </div>
+
+    <!-- Добавлен контейнер для логов -->
+    <pre id="log" style="width:90%; max-width:720px; height:260px; overflow:auto; background:#f7f7f7; border:1px solid #ddd; padding:10px; margin-top:16px; font-size:13px;"></pre>
+
+    <!-- Добавлен блок инструкций и кнопка копирования (fallback) -->
+    <div id="instructions" style="width:90%; max-width:720px; margin-top:14px; text-align:left; font-size:14px; color:#222;">
+        <strong>Инструкции (важно):</strong>
+        <ol>
+            <li>Откройте мини‑приложение только через кнопку "Open WebApp" в сообщении бота (/test). Если вы открыли страницу напрямую — tg.sendData не доставит web_app_data боту.</li>
+            <li>Если web_app_data не дошёл, используйте кнопку "Копировать 1000" и вставьте это число в чат с ботом вручную (это поможет убедиться, что бот отвечает на значение 1000).</li>
+        </ol>
+        <div style="margin-top:8px;">
+            <button id="copyBtn" class="button" style="padding:6px 10px; font-size:14px;">Копировать 1000</button>
+            <span style="margin-left:10px; font-size:13px; color:#666;">Вставьте в чат с ботом и отправьте.</span>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const sendBtn = document.getElementById('sendBtn');
+        const statusDiv = document.getElementById('status');
+
+        // Если открыто как локальный файл — это точно не Telegram
+        const isLocalFile = location.protocol === 'file:';
+
+        // Надёжная проверка: initData — непустая строка ИЛИ initDataUnsafe.user.id существует
+        const hasInitDataString = !!(tg && typeof tg.initData === 'string' && tg.initData.trim().length > 0);
+        const hasInitDataUnsafeUser = !!(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && (tg.initDataUnsafe.user.id || tg.initDataUnsafe.user.id === 0));
+        const isTelegram = !isLocalFile && (hasInitDataString || hasInitDataUnsafeUser);
+
+        if (tg) {
+            try { tg.ready(); } catch (e) { console.warn('tg.ready() error', e); }
+            try { tg.expand(); } catch (e) { /* не критично */ }
+        }
+
+        // Диагностика
+        console.log('location.protocol:', location.protocol);
+        console.log('tg object:', tg);
+        console.log('hasInitDataString:', hasInitDataString);
+        console.log('hasInitDataUnsafeUser:', hasInitDataUnsafeUser);
+        console.log('isTelegram(final):', isTelegram);
+
+        // Диагностика: пользовательский агент
+        console.log('navigator.userAgent:', navigator.userAgent);
+
+        if (isTelegram) {
+            statusDiv.innerText = "Мини-приложение запущено внутри Telegram.";
+            sendBtn.disabled = false;
+        } else {
+            statusDiv.innerText = "Невозможно отправить данные — откройте мини‑приложение внутри Telegram (не открывайте локально).";
+            sendBtn.disabled = true;
+        }
+
+        // Helper: выводить сообщения в лог на странице и в консоль
+        const logEl = document.getElementById('log');
+        function appendLog(type, ...args) {
+            try {
+                const ts = new Date().toISOString();
+                const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ');
+                const line = `[${ts}] ${type.toUpperCase()}: ${msg}\n`;
+                // Вставляем в visual log
+                if (logEl) {
+                    logEl.textContent += line;
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+                // Также обновляем короткий статус
+                if (statusDiv) {
+                    statusDiv.innerText = `${type.toUpperCase()}: ${msg}`;
+                }
+                // И в консоль оригинал
+                originalConsole[type](...args);
+            } catch (e) {
+                originalConsole.error('appendLog error', e);
+            }
+        }
+
+        // Сохраняем оригинальные методы console
+        const originalConsole = {
+            log: console.log.bind(console),
+            info: console.info.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console)
+        };
+
+        // Переопределяем console методы
+        console.log = (...args) => appendLog('log', ...args);
+        console.info = (...args) => appendLog('info', ...args);
+        console.warn = (...args) => appendLog('warn', ...args);
+        console.error = (...args) => appendLog('error', ...args);
+
+        // Выведем начальные диагностические данные на страницу
+        console.log('location.protocol:', location.protocol);
+        console.log('navigator.userAgent:', navigator.userAgent);
+        console.log('tg object:', tg);
+        console.log('isTelegram(final):', isTelegram);
+        if (tg) {
+            console.log('tg.initData:', tg.initData);
+            console.log('tg.initDataUnsafe:', tg.initDataUnsafe);
+        }
+
+        function sendToBot(value) {
+            if (isTelegram && tg && typeof tg.sendData === 'function') {
+                try {
+                    // Блокируем кнопку, чтобы избежать повторных нажатий
+                    sendBtn.disabled = true;
+                    const ts = new Date().toISOString();
+                    console.log('Отправка tg.sendData', { value, ts });
+                    tg.sendData(value);
+
+                    // НЕ закрываем мини‑приложение: пусть окно остаётся открытым для отладки/ответа бота.
+                    statusDiv.innerText = `Данные отправлены (${ts}): ${value}. Ждите сообщение от бота в чате.`;
+                    console.log('tg.sendData() вызван. Окно не закрывается для отладки.');
+
+                } catch (err) {
+                    console.error('Ошибка при sendData:', err);
+                    statusDiv.innerText = "Ошибка при отправке данных: " + err;
+                    sendBtn.disabled = false;
+                }
+            } else {
+                console.warn('sendData недоступен или не в Telegram', { isTelegram, tg });
+                statusDiv.innerText = "Данные не отправлены: приложение не запущено в Telegram или sendData недоступен.";
+            }
+        }
+
+        // Обновить кнопку открытия чата: подставьте username бота ниже
+        const BOT_USERNAME = "huila_pedro_bot";
+        const openChatBtn = document.getElementById('openChatBtn');
+        const openChatLink = document.getElementById('openChatLink');
+        if (!BOT_USERNAME) {
+            openChatBtn.disabled = true;
+            openChatLink.href = "https://t.me/";
+            appendLog('warn', 'Укажите BOT_USERNAME в index.html, чтобы открыть чат из мини‑приложения.');
+        } else {
+            openChatLink.href = `https://t.me/${BOT_USERNAME}`;
+            openChatBtn.addEventListener('click', () => {
+                appendLog('info', 'Попытка открыть чат с ботом через tg.openTelegramLink или ссылку с ?start=');
+                const startPayload = 'from_webapp';
+                const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(startPayload)}`;
+                try {
+                    if (tg && typeof tg.openTelegramLink === 'function') {
+                        tg.openTelegramLink(url);
+                        appendLog('info', 'Вызван tg.openTelegramLink', url);
+                    } else {
+                        window.open(url, '_blank');
+                        appendLog('info', 'Открыт URL в новом окне (fallback):', url);
+                    }
+                } catch (err) {
+                    appendLog('error', 'Ошибка при открытии чата:', err);
+                    window.open(url, '_blank');
+                }
+            });
+        }
+
+        // Подсказка в UI, чтобы пользователь нажал /start в чате бота
+        if (isTelegram) {
+            appendLog('info', 'Если бот не отвечает — нажмите кнопку "Открыть чат с ботом" и выполните /start в чате бота, затем повторите /test -> WebApp -> 1000.');
+        }
+
+        // Кнопка копирования fallback
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText('1000');
+                appendLog('info', 'Скопировано в буфер: 1000. Вставьте и отправьте это сообщение в чат с ботом.');
+                statusDiv.innerText = 'Скопировано: 1000 — вставьте в чат с ботом и отправьте.';
+            } catch (err) {
+                appendLog('error', 'Не удалось скопировать:', err);
+                // fallback: выделить текст для копирования вручную
+                prompt('Скопируйте вручную текст:', '1000');
+            }
+        });
+    </script>
+>>>>>>> 1aa54778ac139c464407423bbcb818f0ced8d814
 </body>
 </html>
