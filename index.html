@@ -11,6 +11,8 @@
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
+    console.log("INIT DATA:", tg.initData);
+    console.log("USER:", tg.initDataUnsafe?.user);
 
     function sendToBot() {
       alert("Отправка...");
