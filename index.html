@@ -31,9 +31,13 @@
     <div id="status"></div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand(); // Открыть на весь экран
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.ready();
+            tg.expand(); // Открыть на весь экран
+        } else {
+            document.getElementById('status').innerText = "Откройте мини-приложение внутри Telegram!";
+        }
 
         function sendToBot(value) {
             const statusDiv = document.getElementById('status');
@@ -41,7 +45,7 @@
                 statusDiv.innerText = "Отправка данных в бот: " + value;
                 tg.sendData(value);
             } else {
-                statusDiv.innerText = "tg.sendData недоступен";
+                statusDiv.innerText = "tg.sendData недоступен. Откройте мини-приложение внутри Telegram!";
             }
         }
     </script>
