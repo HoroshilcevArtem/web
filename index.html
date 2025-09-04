@@ -2,93 +2,65 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мини-приложение</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>Mini App</title>
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f9f9f9;
+      background: #f5f5f5;
     }
-
-    #profile {
-      margin-top: 50px;
+    .header {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-
-    img {
+    .header img {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      margin-right: 10px;
     }
-
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #status {
-      margin-top: 15px;
-      font-weight: bold;
+    .content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 22px;
     }
   </style>
 </head>
 <body>
-  <div id="profile">Загрузка...</div>
-  <button id="addBtn">➕ Увеличить баланс</button>
-  <div id="status">Проверка сервера...</div>
+  <div class="header" id="user-info">
+    <!-- Тут появится аватарка и ник -->
+  </div>
 
+  <div class="content">
+    Контент сайта
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe.user;
+    tg.ready();
 
-    // сюда вставь свой ngrok-URL
-    const API_URL = "https://1fc296b1e8ee.ngrok-free.app";  
+    const user = tg.initDataUnsafe?.user;
+    const userInfoDiv = document.getElementById("user-info");
 
-    let lastBalance = null;
-
-    function renderProfile(balance) {
-      if (user) {
-        document.getElementById("profile").innerHTML =
-          '<img src="${user.photo_url || "https://t.me/i/userpic/320/" + user.id + ".jpg"}" width="120" height="120" alt="Аватар"> <h2>${user.first_name} (ID: ${user.id})</h2> <p>Имя пользователя: @${user.username || "Не указано"}</p> <p>Баланс: ${balance}</p>';
-      } else {
-        document.getElementById("profile").innerText = "Данные пользователя не найдены.";
-      }
+    if (user) {
+      const avatar = user.photo_url
+        ? `<img src="${user.photo_url}" alt="avatar">`
+        : "";
+      const name = user.username || user.first_name || "Гость";
+      userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
+    } else {
+      userInfoDiv.innerHTML = "<span>Гость</span>";
     }
-
-    function checkBalance() {
-      fetch('${API_URL}/get_balance?id=${user.id}')
-        .then(r => r.json())
-        .then(data => {
-          if (lastBalance !== data.balance) {
-            lastBalance = data.balance;
-            renderProfile(data.balance);
-          }
-          document.getElementById("status").innerText = "✅ Сервер онлайн";
-        })
-        .catch(err => {
-          console.error("Ошибка запроса:", err);
-          document.getElementById("status").innerText = "❌ Сервер недоступен";
-        });
-    }
-
-    document.getElementById("addBtn").addEventListener("click", () => {
-      fetch('${API_URL}/add_balance?id=${user.id}, {method: "POST"}')
-        .then(r => r.json())
-        .then(data => {
-          lastBalance = data.balance;
-          renderProfile(data.balance);
-        })
-        .catch(err => {
-          console.error("Ошибка при увеличении баланса:", err);
-          document.getElementById("status").innerText = "❌ Ошибка при обновлении";
-        });
-    });
-
-    // Проверка баланса каждые 1 сек
-    setInterval(checkBalance, 1000);
-
-    tg.expand();
   </script>
 </body>
 </html>
