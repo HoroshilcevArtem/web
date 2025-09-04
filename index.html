@@ -58,7 +58,11 @@
         : "";
       const name = user.first_name || "Гость";
       userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
-    
+      
+      function sendToBot() {
+        tg.sendData("123")
+      }
+
     } else {
       userInfoDiv.innerHTML = "<span>Гость</span>";
     }
