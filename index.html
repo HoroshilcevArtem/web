@@ -3,34 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <title>WebApp Test</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <h2>Тест мини-приложения</h2>
   <div id="user-info"></div>
   <button onclick="sendToBot()">Отправить боту</button>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
 
-    // показать имя + аватар
-    const user = tg.initDataUnsafe?.user;
-    const userInfoDiv = document.getElementById("user-info");
+  // показать имя + аватар
+  const user = tg.initDataUnsafe?.user;
+  const userInfoDiv = document.getElementById("user-info");
 
-    if (user) {
-      const avatar = user.photo_url ? `<img src="${user.photo_url}" width="40" style="border-radius:50%;"> ` : "";
-      const name = user.first_name || "Гость";
-      userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
-    } else {
-      userInfoDiv.innerHTML = "<span>Гость</span>";
-    }
+  if (user) {
+    const avatar = user.photo_url
+      ? `<img src="${user.photo_url}" width="40" style="border-radius:50%;"> `
+      : "";
+    const name = user.first_name || "Гость";
+    userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
+  } else {
+    userInfoDiv.innerHTML = "<span>Гость</span>";
+  }
 
-    // функция отправки данных в бота
-    function sendToBot() {
-      alert("Отправка данных...");
-      tg.sendData("Привет из WebApp 👋");
-    }
-  </script>
+  // функция отправки данных в бота
+  function sendToBot() {
+    alert("Отправка данных...");
+    tg.sendData("Привет из WebApp 👋");
+  }
+</script>
+  
 </body>
 </html>
