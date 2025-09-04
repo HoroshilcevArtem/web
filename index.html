@@ -27,25 +27,50 @@
     </style>
 </head>
 <body>
-    <button class="button" onclick="sendToBot('1000')">1000</button>
+    <button class="button" id="sendBtn" onclick="sendToBot('1000')">1000</button>
     <div id="status"></div>
 
     <script>
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const sendBtn = document.getElementById('sendBtn');
+        const statusDiv = document.getElementById('status');
+
+        // Если открыто как локальный файл — это точно не Telegram
+        const isLocalFile = location.protocol === 'file:';
+
+        // Надёжная проверка: initData — непустая строка ИЛИ initDataUnsafe.user.id существует
+        const hasInitDataString = !!(tg && typeof tg.initData === 'string' && tg.initData.trim().length > 0);
+        const hasInitDataUnsafeUser = !!(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && (tg.initDataUnsafe.user.id || tg.initDataUnsafe.user.id === 0));
+        const isTelegram = !isLocalFile && (hasInitDataString || hasInitDataUnsafeUser);
+
         if (tg) {
-            tg.ready();
-            tg.expand(); // Открыть на весь экран
+            try { tg.ready(); } catch (e) { console.warn('tg.ready() error', e); }
+            try { tg.expand(); } catch (e) { /* не критично */ }
+        }
+
+        // Диагностика
+        console.log('location.protocol:', location.protocol);
+        console.log('tg object:', tg);
+        console.log('hasInitDataString:', hasInitDataString);
+        console.log('hasInitDataUnsafeUser:', hasInitDataUnsafeUser);
+        console.log('isTelegram(final):', isTelegram);
+
+        if (isTelegram) {
+            statusDiv.innerText = "Мини-приложение запущено внутри Telegram.";
+            sendBtn.disabled = false;
         } else {
-            document.getElementById('status').innerText = "Откройте мини-приложение внутри Telegram!";
+            statusDiv.innerText = "Невозможно отправить данные — откройте мини‑приложение внутри Telegram (не открывайте локально).";
+            sendBtn.disabled = true;
         }
 
         function sendToBot(value) {
-            const statusDiv = document.getElementById('status');
-            if (tg && tg.sendData) {
+            if (isTelegram && tg && typeof tg.sendData === 'function') {
                 statusDiv.innerText = "Отправка данных в бот: " + value;
+                console.log('Отправка tg.sendData:', value);
                 tg.sendData(value);
             } else {
-                statusDiv.innerText = "tg.sendData недоступен. Откройте мини-приложение внутри Telegram!";
+                statusDiv.innerText = "Данные не отправлены: приложение не запущено в Telegram или sendData недоступен.";
+                console.warn('sendData недоступен, не отправлено:', value);
             }
         }
     </script>
