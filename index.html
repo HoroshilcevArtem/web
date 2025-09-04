@@ -59,10 +59,6 @@
       const name = user.first_name || "Гость";
       userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
     
-      function sendToBot() {
-      const tg = window.Telegram.WebApp;
-      tg.sendData("Привет из сайта 👋");}
-
     } else {
       userInfoDiv.innerHTML = "<span>Гость</span>";
     }
