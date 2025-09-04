@@ -56,7 +56,7 @@
       const avatar = user.photo_url
         ? `<img src="${user.photo_url}" alt="avatar">`
         : "";
-      const name = user.username || user.first_name || "Гость";
+      const name = user.first_name || "Гость";
       userInfoDiv.innerHTML = avatar + `<span>${name}</span>`;
     } else {
       userInfoDiv.innerHTML = "<span>Гость</span>";
