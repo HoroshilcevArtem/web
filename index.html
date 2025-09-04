@@ -65,9 +65,23 @@
 
         function sendToBot(value) {
             if (isTelegram && tg && typeof tg.sendData === 'function') {
-                statusDiv.innerText = "Отправка данных в бот: " + value;
-                console.log('Отправка tg.sendData:', value);
-                tg.sendData(value);
+                try {
+                    statusDiv.innerText = "Отправка данных в бот: " + value;
+                    console.log('Отправка tg.sendData:', value);
+                    tg.sendData(value);
+                    // Закрываем мини-приложение — в ряде клиентов данные доходят корректно только после закрытия
+                    try {
+                        tg.close();
+                        console.log('tg.close() вызван');
+                        statusDiv.innerText = "Данные отправлены, приложение закрывается...";
+                    } catch (closeErr) {
+                        console.warn('Ошибка при вызове tg.close():', closeErr);
+                        statusDiv.innerText = "Данные отправлены (tg.close() недоступен).";
+                    }
+                } catch (err) {
+                    console.error('Ошибка при sendData:', err);
+                    statusDiv.innerText = "Ошибка при отправке данных: " + err;
+                }
             } else {
                 statusDiv.innerText = "Данные не отправлены: приложение не запущено в Telegram или sendData недоступен.";
                 console.warn('sendData недоступен, не отправлено:', value);
