@@ -1,28 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <title>WebApp Test</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    .button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 10px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-  <button class="button" onclick="sendToBot('1000')">1000</button>
+    <button class="button" onclick="sendToBot('1000')">1000</button>
+    <div id="status"></div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Открыть на весь экран
 
-    function sendToBot(value) {
-      tg.sendData(value);
-    }
-  </script>
+        function sendToBot(value) {
+            const statusDiv = document.getElementById('status');
+            if (tg && tg.sendData) {
+                statusDiv.innerText = "Отправка данных в бот: " + value;
+                tg.sendData(value);
+            } else {
+                statusDiv.innerText = "tg.sendData недоступен";
+            }
+        }
+    </script>
 </body>
 </html>
