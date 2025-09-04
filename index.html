@@ -4,17 +4,24 @@
   <meta charset="utf-8">
   <title>WebApp Test</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    .button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <button onclick="sendToBot()">Отправить</button>
+  <button class="button" onclick="sendToBot('1000')">1000</button>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
 
-    function sendToBot() {
-      // Вместо console.log — отправляем прямо в бота
-      tg.sendData("INIT DATA: " + tg.initData);
+    function sendToBot(value) {
+      tg.sendData(value);
     }
   </script>
 </body>
