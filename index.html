@@ -24,11 +24,26 @@
             font-size: 14px;
             color: #333;
         }
+        /* Добавлены стили для логов */
+        #log {
+            width: 90%;
+            max-width: 720px;
+            height: 260px;
+            overflow: auto;
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
     <button class="button" id="sendBtn" onclick="sendToBot('1000')">1000</button>
     <div id="status"></div>
+
+    <!-- Добавлен контейнер для логов -->
+    <pre id="log" style="width:90%; max-width:720px; height:260px; overflow:auto; background:#f7f7f7; border:1px solid #ddd; padding:10px; margin-top:16px; font-size:13px;"></pre>
 
     <script>
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -55,6 +70,9 @@
         console.log('hasInitDataUnsafeUser:', hasInitDataUnsafeUser);
         console.log('isTelegram(final):', isTelegram);
 
+        // Диагностика: пользовательский агент
+        console.log('navigator.userAgent:', navigator.userAgent);
+
         if (isTelegram) {
             statusDiv.innerText = "Мини-приложение запущено внутри Telegram.";
             sendBtn.disabled = false;
@@ -63,33 +81,65 @@
             sendBtn.disabled = true;
         }
 
+        // Helper: выводить сообщения в лог на странице и в консоль
+        const logEl = document.getElementById('log');
+        function appendLog(type, ...args) {
+            try {
+                const ts = new Date().toISOString();
+                const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ');
+                const line = `[${ts}] ${type.toUpperCase()}: ${msg}\n`;
+                // Вставляем в visual log
+                if (logEl) {
+                    logEl.textContent += line;
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+                // Также обновляем короткий статус
+                if (statusDiv) {
+                    statusDiv.innerText = `${type.toUpperCase()}: ${msg}`;
+                }
+                // И в консоль оригинал
+                originalConsole[type](...args);
+            } catch (e) {
+                originalConsole.error('appendLog error', e);
+            }
+        }
+
+        // Сохраняем оригинальные методы console
+        const originalConsole = {
+            log: console.log.bind(console),
+            info: console.info.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console)
+        };
+
+        // Переопределяем console методы
+        console.log = (...args) => appendLog('log', ...args);
+        console.info = (...args) => appendLog('info', ...args);
+        console.warn = (...args) => appendLog('warn', ...args);
+        console.error = (...args) => appendLog('error', ...args);
+
+        // Выведем начальные диагностические данные на страницу
+        console.log('location.protocol:', location.protocol);
+        console.log('navigator.userAgent:', navigator.userAgent);
+        console.log('tg object:', tg);
+        console.log('isTelegram(final):', isTelegram);
+        if (tg) {
+            console.log('tg.initData:', tg.initData);
+            console.log('tg.initDataUnsafe:', tg.initDataUnsafe);
+        }
+
         function sendToBot(value) {
             if (isTelegram && tg && typeof tg.sendData === 'function') {
                 try {
                     // Блокируем кнопку, чтобы избежать повторных нажатий
                     sendBtn.disabled = true;
-                    statusDiv.innerText = "Отправка данных в бот: " + value;
-                    console.log('Отправка tg.sendData:', value);
+                    const ts = new Date().toISOString();
+                    console.log('Отправка tg.sendData', { value, ts });
                     tg.sendData(value);
 
-                    // Дадим время на отправку данных, затем закроем (если нужно).
-                    // Некоторые клиенты требуют небольшой паузы перед закрытием.
-                    const CLOSE_DELAY_MS = 700;
-                    setTimeout(() => {
-                        try {
-                            if (typeof tg.close === 'function') {
-                                tg.close();
-                                console.log('tg.close() вызван после задержки', CLOSE_DELAY_MS);
-                                statusDiv.innerText = "Данные отправлены, мини‑приложение закрывается...";
-                            } else {
-                                console.log('tg.close() не доступен');
-                                statusDiv.innerText = "Данные отправлены (tg.close() недоступен).";
-                            }
-                        } catch (closeErr) {
-                            console.warn('Ошибка при вызове tg.close():', closeErr);
-                            statusDiv.innerText = "Данные отправлены (ошибка при закрытии).";
-                        }
-                    }, CLOSE_DELAY_MS);
+                    // НЕ закрываем мини‑приложение: пусть окно остаётся открытым для отладки/ответа бота.
+                    statusDiv.innerText = `Данные отправлены (${ts}): ${value}. Ждите сообщение от бота в чате.`;
+                    console.log('tg.sendData() вызван. Окно не закрывается для отладки.');
 
                 } catch (err) {
                     console.error('Ошибка при sendData:', err);
@@ -97,8 +147,8 @@
                     sendBtn.disabled = false;
                 }
             } else {
+                console.warn('sendData недоступен или не в Telegram', { isTelegram, tg });
                 statusDiv.innerText = "Данные не отправлены: приложение не запущено в Telegram или sendData недоступен.";
-                console.warn('sendData недоступен, не отправлено:', value);
             }
         }
     </script>
