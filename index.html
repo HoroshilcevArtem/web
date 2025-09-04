@@ -66,21 +66,35 @@
         function sendToBot(value) {
             if (isTelegram && tg && typeof tg.sendData === 'function') {
                 try {
+                    // Блокируем кнопку, чтобы избежать повторных нажатий
+                    sendBtn.disabled = true;
                     statusDiv.innerText = "Отправка данных в бот: " + value;
                     console.log('Отправка tg.sendData:', value);
                     tg.sendData(value);
-                    // Закрываем мини-приложение — в ряде клиентов данные доходят корректно только после закрытия
-                    try {
-                        tg.close();
-                        console.log('tg.close() вызван');
-                        statusDiv.innerText = "Данные отправлены, приложение закрывается...";
-                    } catch (closeErr) {
-                        console.warn('Ошибка при вызове tg.close():', closeErr);
-                        statusDiv.innerText = "Данные отправлены (tg.close() недоступен).";
-                    }
+
+                    // Дадим время на отправку данных, затем закроем (если нужно).
+                    // Некоторые клиенты требуют небольшой паузы перед закрытием.
+                    const CLOSE_DELAY_MS = 700;
+                    setTimeout(() => {
+                        try {
+                            if (typeof tg.close === 'function') {
+                                tg.close();
+                                console.log('tg.close() вызван после задержки', CLOSE_DELAY_MS);
+                                statusDiv.innerText = "Данные отправлены, мини‑приложение закрывается...";
+                            } else {
+                                console.log('tg.close() не доступен');
+                                statusDiv.innerText = "Данные отправлены (tg.close() недоступен).";
+                            }
+                        } catch (closeErr) {
+                            console.warn('Ошибка при вызове tg.close():', closeErr);
+                            statusDiv.innerText = "Данные отправлены (ошибка при закрытии).";
+                        }
+                    }, CLOSE_DELAY_MS);
+
                 } catch (err) {
                     console.error('Ошибка при sendData:', err);
                     statusDiv.innerText = "Ошибка при отправке данных: " + err;
+                    sendBtn.disabled = false;
                 }
             } else {
                 statusDiv.innerText = "Данные не отправлены: приложение не запущено в Telegram или sendData недоступен.";
