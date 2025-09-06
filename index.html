@@ -1,24 +1,52 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Главная страница</title>
-	<style>
-		body {
-			display: flex;
-			background-color: black
-		}
-		.b1{
-			width: 50%;
-		}
-		.b2{
-			width: 50%;	
-		}
-	</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главное меню</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
+    .container {
+      display: flex;
+      height: 100vh; /* контейнер занимает весь экран */
+    }
+    .half {
+      flex: 1; /* делит экран поровну */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    button {
+      width: 80%;
+      height: 80%;
+      font-size: 2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .left button {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .right button {
+      background-color: #2196F3;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-	<button class="b1">🔴⚫️</button>
-	<button class="b2">🎰</button>
+  <div class="container">
+    <div class="half left">
+      <button>🎰Слот-машина🎰</button>
+    </div>
+    <div class="half right">
+      <button>⚫Рулетка🔴</button>
+    </div>
+  </div>
 </body>
 </html>
