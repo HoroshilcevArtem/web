@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Слоты</title>
+	<style>
+        body {
+			/* Черно-синий градиент */
+			font-family: Arial, Helvetica, sans-serif;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			height: 100vh;
+			background: rgb(0, 0, 0);
+			margin: 0;
+			overflow: hidden;
+			position: fixed;
+			width: 100%;
+		}
+        button {
+			padding:10px 18px;
+			background: linear-gradient(180deg,#2dd4bf,#06b6d4);
+			border: none;
+			color: rgb(10, 64, 64);
+			font-weight: 700;
+			border-radius: 8px;
+			cursor: pointer;
+			box-shadow: 0 8px 20px rgba(255, 255, 255, 0.18);
+		}
+		button:disabled { opacity: 0.6; cursor: default; }
+		.info {
+			margin-top:12px;
+			font-size:14px;
+			opacity:0.9;
+		}
+    </style>
+</head>
+<body>
+    <button onclick="window.location.href='index.html'">Дом</button>
+</body>
+</html>
