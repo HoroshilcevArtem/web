@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Responsive TOP Video Player</title>
+
+<style>
+/* ===== БАЗОВЫЙ СБРОС ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== АДАПТИВНЫЙ ФОН И ШРИФТ ===== */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg,#0f0f14,#050507);
+  color: white;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  animation: fadeIn 0.7s ease;
+}
+
+/* ===== ШАПКА ===== */
+header {
+  padding: clamp(10px, 2vw, 20px);
+  text-align: center;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ТОП бейдж */
+.top-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: linear-gradient(45deg,#ffcc00,#ff7b00);
+  color: black;
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: clamp(12px, 2.5vw, 16px);
+  animation: pulse 2s infinite;
+}
+
+/* Название фильма */
+.title {
+  font-size: clamp(14px, 3vw, 20px);
+  opacity: 0.9;
+}
+
+/* ===== БЛОК ВИДЕО ===== */
+.video-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(6px, 2vw, 16px);
+}
+
+video {
+  width: 100%;
+  max-height: 100%;
+  border-radius: clamp(8px, 2vw, 16px);
+  background: black;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+/* ===== КНОПКИ КАЧЕСТВА ===== */
+.controls {
+  padding: clamp(8px, 2vw, 14px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(6px, 2vw, 12px);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+}
+
+.btn {
+  padding: clamp(8px, 2vw, 14px);
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  font-size: clamp(12px, 2.5vw, 16px);
+  background: rgba(255,255,255,0.1);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+}
+
+.btn.active {
+  background: linear-gradient(45deg,#4facfe,#00f2fe);
+  color: black;
+}
+
+/* ===== АНИМАЦИИ ===== */
+@keyframes fadeIn {
+  from {opacity:0; transform: translateY(10px);} 
+  to {opacity:1; transform: translateY(0);} 
+}
+
+@keyframes pulse {
+  0% { transform: scale(1);} 
+  50% { transform: scale(1.08);} 
+  100% { transform: scale(1);} 
+}
+
+/* ===== АДАПТАЦИЯ ДЛЯ ШИРОКИХ ЭКРАНОВ ===== */
+@media (min-width: 768px) {
+  .controls {
+    grid-template-columns: repeat(3, 160px);
+    justify-content: center;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <div class="top-badge">ТОП</div>
+  <div class="title">Kingsman: Секретная служба (2014)</div>
+</header>
+
+<div class="video-wrap">
+  <!--
+    VIDEO ПЛЕЕР
+    controls — стандартные элементы управления
+    controlsList — скрывает скачивание и скорость
+    disablePictureInPicture — отключает PiP
+    oncontextmenu — отключает правый клик
+  -->
+  <video
+    id="player"
+    controls
+    playsinline
+    controlsList="nodownload noplaybackrate"
+    disablePictureInPicture
+    oncontextmenu="return false;"
+  >
+    <source id="source" src="https://uranium.cdn.cinemap.cc/891f8c659921398cf7cbbbcdf945f4c0:2026021501/movies/3350d3ab6c3081e242c4c086ad13cb7a902cb884/720.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div class="controls">
+  <button class="btn" onclick="setQuality('360', this)">360p</button>
+  <button class="btn active" onclick="setQuality('720', this)">720p</button>
+  <button class="btn" onclick="setQuality('1080', this)">1080p</button>
+</div>
+
+</div>
+
+<script>
+/*
+=====================================
+ВЫБОР КАЧЕСТВА ВИДЕО
+=====================================
+Содержит ссылки на разные разрешения
+Замени example.com на реальные файлы
+*/
+const links = {
+  "360": "https://flash.cdn.cinemap.cc/3ee50cb7f3a9e78be583b88e7eac64c2:2026021501/movies/3350d3ab6c3081e242c4c086ad13cb7a902cb884/360.mp4",
+  "720": "https://uranium.cdn.cinemap.cc/891f8c659921398cf7cbbbcdf945f4c0:2026021501/movies/3350d3ab6c3081e242c4c086ad13cb7a902cb884/720.mp4",
+  "1080": "https://mortis.cdn.cinemap.cc/18964c3a30f88d348585f412002398c9:2026021501/movies/3350d3ab6c3081e242c4c086ad13cb7a902cb884/1080.mp4"
+};
+
+/*
+=====================================
+ФУНКЦИЯ setQuality
+=====================================
+Меняет качество видео без перезапуска
+Сохраняет позицию и состояние проигрывания
+*/
+function setQuality(q, el) {
+  const video = document.getElementById("player");
+  const source = document.getElementById("source");
+
+  // обновляем активную кнопку
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+
+  // сохраняем текущее состояние
+  const time = video.currentTime;
+  const playing = !video.paused;
+
+  // меняем источник
+  source.src = links[q];
+  video.load();
+
+  // возвращаем позицию после загрузки
+  video.onloadedmetadata = () => {
+    video.currentTime = time;
+    if (playing) video.play();
+  };
+}
+</script>
+
+</body>
+</html>
