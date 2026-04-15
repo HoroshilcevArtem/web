@@ -14,8 +14,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def path(*parts):
-    return os.path.join(BASE_DIR, *parts)
+def path(*args):
+    return os.path.join(BASE_DIR, *args)
 
 kb = ReplyKeyboardMarkup(
     keyboard=[
@@ -248,12 +248,12 @@ def load_symbols_from_sprite(path, names_list):
     except: return {}
 
 SET_1 = load_symbols_from_sprite(
-    path("assets", "Символы слота на темном фоне.png"),
+    path("assets", "assets/fruits.png"),
     NAMES_FRUITS
 )
 
 SET_2 = load_symbols_from_sprite(
-    path("assets", "грабеж.png"),
+    path("assets", "assets/robbery.png"),
     NAMES_ROBBERY
 )
 # === ГЕНЕРАЦИЯ АНИМАЦИИ ===
