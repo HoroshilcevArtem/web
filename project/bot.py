@@ -12,6 +12,11 @@ from aiogram.types import BufferedInputFile
 from PIL import Image, ImageDraw, ImageFont
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def path(*parts):
+    return os.path.join(BASE_DIR, *parts)
+
 kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="❗️Как играть❓")],
@@ -173,16 +178,15 @@ def split_goose_sprites():
 def generate_goose_profile(wins):
     # 1. Пути к нарезанным PNG (которые мы получили из JPG)
     if wins >= 60:
-        path = "goose/lieutenant.png"
+        img_path = path("goose", "lieutenant.png")
     elif wins >= 40:
-        path = "goose/junior.png"
+        img_path = path("goose", "junior.png")
     elif wins >= 10:
-        path = "goose/recruit.png"
+        img_path = path("goose", "recruit.png")
     else:
-        path = "goose/major.png"
+        img_path = path("goose", "major.png")
 
-    # 2. Открываем гуся
-    goose = Image.open(path).convert("RGBA")
+    goose = Image.open(img_path).convert("RGBA")
 
     # --- ХАК: Делаем ЗЕЛЕНЫЙ фон прозрачным ---
     datas = goose.getdata()
@@ -199,7 +203,7 @@ def generate_goose_profile(wins):
     # ------------------------------------------
 
     # 3. Открываем фон
-    bg = Image.open(r"D:\program\Python\Педро\фон 2.jpg").convert("RGBA")
+    bg = Image.open(path("assets", "фон 2.jpg")).convert("RGBA")
     
     # Масштабируем фон под гуся
     bg = bg.resize(goose.size, Image.Resampling.LANCZOS)
@@ -243,9 +247,15 @@ def load_symbols_from_sprite(path, names_list):
         return symbols_dict
     except: return {}
 
-SET_1 = load_symbols_from_sprite(r"D:\program\Python\Педро\Символы слота на темном фоне.png", NAMES_FRUITS)
-SET_2 = load_symbols_from_sprite(r"D:\program\Python\Педро\грабеж.png", NAMES_ROBBERY)
+SET_1 = load_symbols_from_sprite(
+    path("assets", "Символы слота на темном фоне.png"),
+    NAMES_FRUITS
+)
 
+SET_2 = load_symbols_from_sprite(
+    path("assets", "грабеж.png"),
+    NAMES_ROBBERY
+)
 # === ГЕНЕРАЦИЯ АНИМАЦИИ ===
 def generate_slot_gif():
     current_set = SET_1 if random.random() < 0.5 else SET_2
@@ -455,8 +465,13 @@ def generate_bonus_gif():
     center_x = WIDTH // 2
 
     # ШРИФТЫ
-    font_big = ImageFont.truetype(r"D:\program\Python\Педро\fronts\BebasNeue-Regular.ttf", 48)
-    font_mid = ImageFont.truetype(r"D:\program\Python\Педро\fronts\BebasNeue-Regular.ttf", 28)
+    font_big = ImageFont.truetype(
+    path("fronts", "BebasNeue-Regular.ttf"), 48
+    )
+
+    font_mid = ImageFont.truetype(
+        path("fronts", "BebasNeue-Regular.ttf"), 28
+    )
 
     # 🎯 выигрыш
     win_bonus = random.choice(BONUSES)
