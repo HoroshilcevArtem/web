@@ -78,6 +78,10 @@ def init_db():
 
     try:
         cur.execute("ALTER TABLE users ADD COLUMN wins INTEGER DEFAULT 0")
+    except:
+        pass
+
+    try:
         cur.execute("ALTER TABLE users ADD COLUMN last_bonus INTEGER DEFAULT 0")
     except:
         pass
