@@ -248,12 +248,12 @@ def load_symbols_from_sprite(path, names_list):
     except: return {}
 
 SET_1 = load_symbols_from_sprite(
-    path("assets", "assets/fruits.png"),
+    path("assets", "fruits.png"),
     NAMES_FRUITS
 )
 
 SET_2 = load_symbols_from_sprite(
-    path("assets", "assets/robbery.png"),
+    path("assets", "robbery.png"),
     NAMES_ROBBERY
 )
 # === ГЕНЕРАЦИЯ АНИМАЦИИ ===
