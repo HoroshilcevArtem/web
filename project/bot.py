@@ -71,7 +71,8 @@ def init_db():
         user_id INTEGER PRIMARY KEY,
         username TEXT,
         balance INTEGER DEFAULT 1000,
-        wins INTEGER DEFAULT 0
+        wins INTEGER DEFAULT 0,
+        last_bonus INTEGER DEFAULT 0
     )
     """)
 
@@ -128,6 +129,28 @@ def get_profile(user_id):
     res = cur.fetchone()
     conn.close()
     return res
+
+BONUS_COOLDOWN = 3 * 60 * 60  # 3 часа
+
+
+def get_last_bonus(user_id):
+    conn = sqlite3.connect("casino.db")
+    cur = conn.cursor()
+    cur.execute("SELECT last_bonus FROM users WHERE user_id = ?", (user_id,))
+    res = cur.fetchone()
+    conn.close()
+    return res[0] if res else 0
+
+
+def update_last_bonus(user_id):
+    conn = sqlite3.connect("casino.db")
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET last_bonus = ? WHERE user_id = ?",
+        (int(datetime.datetime.now().timestamp()), user_id)
+    )
+    conn.commit()
+    conn.close()
 
 def get_rank(wins):
     if wins >= 60:
@@ -647,6 +670,20 @@ async def bonus(message: types.Message):
 
     get_user(user_id, username)
 
+    now = int(datetime.datetime.now().timestamp())
+    last_bonus = get_last_bonus(user_id)
+
+    # ⛔ Проверка кулдауна
+    if now - last_bonus < BONUS_COOLDOWN:
+        remaining = BONUS_COOLDOWN - (now - last_bonus)
+
+        hours = remaining // 3600
+        minutes = (remaining % 3600) // 60
+
+        return await message.answer(
+            f"⏳ Бонус будет доступен через {hours}ч {minutes}м"
+        )
+
     try:
         gif, amount = generate_bonus_gif()
 
@@ -656,6 +693,7 @@ async def bonus(message: types.Message):
         await asyncio.sleep(10)
 
         update_balance(user_id, amount)
+        update_last_bonus(user_id)
 
         new_bal = get_user(user_id, username)
 
@@ -776,6 +814,16 @@ async def router(message: types.Message):
 
         elif re.match(r"(?i)^(профиль|/profile|/profile@huila_pedro_bot|👤Профиль💼)$", text):
             username, balance, wins = get_profile(message.from_user.id)
+            last_bonus = get_last_bonus(message.from_user.id)
+            now = int(datetime.datetime.now().timestamp())
+            remaining = BONUS_COOLDOWN - (now - last_bonus)
+
+            if remaining <= 0:
+                bonus_text = "🎁 Бонус: доступен"
+            else:
+                hours = remaining // 3600
+                minutes = (remaining % 3600) // 60
+                bonus_text = f"⏳ Бонус через: {hours}ч {minutes}м"
 
             rank = get_rank(wins)
             img = generate_goose_profile(wins)
@@ -784,7 +832,8 @@ async def router(message: types.Message):
                 f"👤 {username}\n"
                 f"{rank}\n\n"
                 f"🏆 Победы: {wins}\n"
-                f"💰 Баланс: {format_money(balance)}"
+                f"💰 Баланс: {format_money(balance)}\n"
+                f"{bonus_text}"
             )
 
             file = BufferedInputFile(img.read(), filename="profile.png")
