@@ -12,8 +12,6 @@ from aiogram.types import BufferedInputFile
 from PIL import Image, ImageDraw, ImageFont
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 def path(*args):
     return os.path.join(BASE_DIR, *args)
 
@@ -34,10 +32,10 @@ REEL_WIDTH, REEL_HEIGHT = 110, 110
 REEL_Y = HEIGHT // 2 - REEL_HEIGHT // 2
 REEL_X = [0, 120, 240]
 
-FPS = 10
-TOTAL_SECONDS = 12  # Увеличили до 12 секунд
+FPS = 8
+TOTAL_SECONDS = 10  # Увеличили до 12 секунд
 TOTAL_FRAMES = FPS * TOTAL_SECONDS
-STOP_TIMES = [7, 8, 9] # Тайминги остановки по ТЗ
+STOP_TIMES = [3, 5, 7] # Тайминги остановки по ТЗ
 
 NAMES_FRUITS = ["🍒 Вишня", "🍋 Лимон", "🍊 Апельсин", "🔔 Колокольчик", "💎 Алмаз", "🎰 BAR"]
 NAMES_ROBBERY = ["🤖 Робот-1", "👤 Робот-2", "🚁 Дрон", "💵 Пачка денег", "🗄 Сейф", "💰 Мешок", "🔫 Винтовка", "🏆 Слитки", "👜 Сумка"]
@@ -61,39 +59,53 @@ def get_user_lock(user_id: int) -> asyncio.Lock:
         user_locks[user_id] = asyncio.Lock()
     return user_locks[user_id]
 
-# === БД ===
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = "casino.db"
+
+# === ПОДКЛЮЧЕНИЕ ===
+def get_conn():
+    return sqlite3.connect(DB_PATH, check_same_thread=False)
+
+# === ИНИЦИАЛИЗАЦИЯ БД ===
 def init_db():
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
 
+    # базовая таблица
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY,
-        username TEXT,
-        balance INTEGER DEFAULT 1000,
-        wins INTEGER DEFAULT 0,
-        last_bonus INTEGER DEFAULT 0
+        user_id INTEGER PRIMARY KEY
     )
     """)
 
-    try:
-        cur.execute("ALTER TABLE users ADD COLUMN wins INTEGER DEFAULT 0")
-    except:
-        pass
+    # какие колонки ДОЛЖНЫ быть
+    required_columns = {
+        "username": "TEXT",
+        "balance": "INTEGER DEFAULT 1000",
+        "wins": "INTEGER DEFAULT 0",
+        "last_bonus": "INTEGER DEFAULT 0"
+    }
 
-    try:
-        cur.execute("ALTER TABLE users ADD COLUMN last_bonus INTEGER DEFAULT 0")
-    except:
-        pass
+    # получаем текущие колонки
+    cur.execute("PRAGMA table_info(users)")
+    existing_columns = [col[1] for col in cur.fetchall()]
+
+    # добавляем недостающие
+    for col, col_type in required_columns.items():
+        if col not in existing_columns:
+            print(f"➕ Добавляю колонку: {col}")
+            cur.execute(f"ALTER TABLE users ADD COLUMN {col} {col_type}")
 
     conn.commit()
     conn.close()
 
+# === ПОЛЬЗОВАТЕЛЬ ===
 def get_user(user_id, username):
-    username = (username or "Игрок")[:10]  # ограничение 10 символов
+    username = (username or "Игрок")[:10]
 
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
+
     cur.execute("SELECT balance FROM users WHERE user_id = ?", (user_id,))
     res = cur.fetchone()
 
@@ -105,55 +117,78 @@ def get_user(user_id, username):
         conn.commit()
         conn.close()
         return 1000
-    else:
-        # обновляем ник если изменился
-        cur.execute("UPDATE users SET username = ? WHERE user_id = ?", (username, user_id))
-        conn.commit()
 
+    # обновляем ник
+    cur.execute("UPDATE users SET username = ? WHERE user_id = ?", (username, user_id))
+    conn.commit()
     conn.close()
+
     return res[0]
 
+
 def update_balance(user_id, amount):
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
-    cur.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, user_id))
+
+    cur.execute(
+        "UPDATE users SET balance = balance + ? WHERE user_id = ?",
+        (amount, user_id)
+    )
+
     conn.commit()
     conn.close()
 
 def add_win(user_id):
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
-    cur.execute("UPDATE users SET wins = wins + 1 WHERE user_id = ?", (user_id,))
+
+    cur.execute(
+        "UPDATE users SET wins = wins + 1 WHERE user_id = ?",
+        (user_id,)
+    )
+
     conn.commit()
     conn.close()
 
 def get_profile(user_id):
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT username, balance, wins FROM users WHERE user_id = ?", (user_id,))
+
+    cur.execute(
+        "SELECT username, balance, wins FROM users WHERE user_id = ?",
+        (user_id,)
+    )
+
     res = cur.fetchone()
     conn.close()
     return res
 
-BONUS_COOLDOWN = 3 * 60 * 60  # 3 часа
-
+# === БОНУС ===
+BONUS_COOLDOWN = 3 * 60 * 60
 
 def get_last_bonus(user_id):
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT last_bonus FROM users WHERE user_id = ?", (user_id,))
+
+    cur.execute(
+        "SELECT last_bonus FROM users WHERE user_id = ?",
+        (user_id,)
+    )
+
     res = cur.fetchone()
     conn.close()
+
     return res[0] if res else 0
 
-
 def update_last_bonus(user_id):
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
+
     cur.execute(
         "UPDATE users SET last_bonus = ? WHERE user_id = ?",
         (int(datetime.datetime.now().timestamp()), user_id)
     )
+
     conn.commit()
     conn.close()
 
@@ -321,7 +356,7 @@ def generate_slot_gif():
 
             center_y = REEL_Y + REEL_HEIGHT // 2 - CELL // 2
             
-            for j in range(-2, 3):
+            for j in range(-1, 2):
                 # Логика: если барабан стоит, в центре (j=0) всегда результат
                 if frame >= sf and j == 0:
                     sym = result[i]
@@ -342,10 +377,10 @@ def generate_slot_gif():
         for rx in REEL_X:
             draw.rectangle([rx + 5, HEIGHT // 2 - 2, rx + REEL_WIDTH - 5, HEIGHT // 2 + 2], fill="#ffd700aa")
 
-        frames.append(img.convert("RGB"))
+        frames.append(img)
 
     # Сжатие
-    frames = [f.convert("P", palette=Image.ADAPTIVE, colors=64) for f in frames]
+    frames = [f.convert("P", palette=Image.ADAPTIVE, colors=32) for f in frames]
     buffer = BytesIO()
     frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], duration=100, loop=0)
     buffer.seek(0)
@@ -644,18 +679,18 @@ def generate_bonus_gif():
 async def text_slot_animation(message, result, bet):
     msg = await message.reply(f"🎰СЛОТ-МАШИНА🎰\n{result[0]} 🔓 🔒")
     # второй символ (ещё через 4 сек)
-    await asyncio.sleep(4)
+    await asyncio.sleep(3)
     await msg.edit_text(f"🎰СЛОТ-МАШИНА🎰\n{result[0]} {result[1]} 🔓")
 
     # третий символ (ещё через 4 сек)
-    await asyncio.sleep(5)
+    await asyncio.sleep(4)
     await msg.edit_text(f"🎰СЛОТ-МАШИНА🎰\n{' | '.join(result)}")
     
 
     return msg
 
 def get_top_players():
-    conn = sqlite3.connect("casino.db")
+    conn = get_conn()
     cur = conn.cursor()
 
     cur.execute("""
@@ -665,9 +700,9 @@ def get_top_players():
         LIMIT 10
     """)
 
-    top = cur.fetchall()
+    res = cur.fetchall()
     conn.close()
-    return top
+    return res
 
 async def bonus(message: types.Message):
     user_id = message.from_user.id
@@ -709,11 +744,14 @@ async def bonus(message: types.Message):
     except Exception as e:
         await message.answer("⚠️ Ошибка бонуса")
 
-async def transfer_money(from_id, to_id, amount):
-    conn = sqlite3.connect("casino.db")
+def transfer_money(from_id, to_id, amount):
+    conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("UPDATE users SET balance = balance - ? WHERE user_id = ?", (amount, from_id))
+    cur.execute(
+        "UPDATE users SET balance = balance - ? WHERE user_id = ?",
+        (amount, from_id)
+    )
 
     cur.execute("SELECT user_id FROM users WHERE user_id = ?", (to_id,))
     if cur.fetchone() is None:
@@ -722,7 +760,10 @@ async def transfer_money(from_id, to_id, amount):
             (to_id, "Игрок", amount)
         )
     else:
-        cur.execute("UPDATE users SET balance = balance + ? WHERE user_id = ?", (amount, to_id))
+        cur.execute(
+            "UPDATE users SET balance = balance + ? WHERE user_id = ?",
+            (amount, to_id)
+        )
 
     conn.commit()
     conn.close()
