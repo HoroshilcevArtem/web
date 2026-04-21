@@ -10,7 +10,12 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile
 from PIL import Image, ImageDraw, ImageFont
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=4)
+
+db_lock = asyncio.Lock()
 
 def path(*args):
     return os.path.join(BASE_DIR, *args)
@@ -62,9 +67,8 @@ def get_user_lock(user_id: int) -> asyncio.Lock:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = "casino.db"
 
-# === ПОДКЛЮЧЕНИЕ ===
 def get_conn():
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+    return sqlite3.connect("casino.db", check_same_thread=False)
 
 # === ИНИЦИАЛИЗАЦИЯ БД ===
 def init_db():
@@ -111,7 +115,7 @@ def get_user(user_id, username):
 
     if res is None:
         cur.execute(
-            "INSERT INTO users (user_id, username, balance) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO users (user_id, username, balance) VALUES (?, ?, ?)",
             (user_id, username, 1000)
         )
         conn.commit()
@@ -130,13 +134,15 @@ def update_balance(user_id, amount):
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute(
-        "UPDATE users SET balance = balance + ? WHERE user_id = ?",
-        (amount, user_id)
-    )
-
-    conn.commit()
-    conn.close()
+    try:
+        cur.execute("BEGIN IMMEDIATE")
+        cur.execute(
+            "UPDATE users SET balance = balance + ? WHERE user_id = ?",
+            (amount, user_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 def add_win(user_id):
     conn = get_conn()
@@ -164,6 +170,7 @@ def get_profile(user_id):
     return res
 
 # === БОНУС ===
+
 BONUS_COOLDOWN = 3 * 60 * 60
 
 def get_last_bonus(user_id):
@@ -408,7 +415,8 @@ async def spin(message: types.Message):
         res = None
 
         if use_gif:
-            gif, res = generate_slot_gif()
+            loop = asyncio.get_running_loop()
+            gif, res = await loop.run_in_executor(executor, generate_slot_gif)
             file = BufferedInputFile(gif.read(), filename="slot.gif")
             sent = await message.answer_animation(
                 file,
@@ -516,9 +524,9 @@ def draw_text_pro(draw, position, text, font, fill, stroke_fill="black", stroke_
 def generate_bonus_gif():
     WIDTH, HEIGHT = 420, 220
 
-    FPS = 7
-    SPIN_TIME = 13
-    HOLD_TIME = 2
+    FPS = 5
+    SPIN_TIME = 8
+    HOLD_TIME = 1
 
     SPIN_FRAMES = FPS * SPIN_TIME
     HOLD_FRAMES = FPS * HOLD_TIME
@@ -527,24 +535,15 @@ def generate_bonus_gif():
     CELL_W = 120
     center_x = WIDTH // 2
 
-    # ШРИФТЫ
-    font_big = ImageFont.truetype(
-    path("fronts", "BebasNeue-Regular.ttf"), 48
-    )
+    font_mid = ImageFont.truetype(path("fronts", "BebasNeue-Regular.ttf"), 26)
 
-    font_mid = ImageFont.truetype(
-        path("fronts", "BebasNeue-Regular.ttf"), 28
-    )
-
-    # 🎯 выигрыш
     win_bonus = random.choice(BONUSES)
 
-    # длинная лента
     tape = []
-    for _ in range(60):
+    for _ in range(30):
         tape.extend(BONUSES)
 
-    win_index = random.randint(25, 45)
+    win_index = random.randint(20, 35)
     tape[win_index] = win_bonus
 
     final_offset = win_index * CELL_W - center_x + CELL_W // 2
@@ -552,16 +551,9 @@ def generate_bonus_gif():
     frames = []
 
     for frame in range(TOTAL_FRAMES):
-
-        # --- ФОН ПУСТЫНИ ---
         img = Image.new("RGB", (WIDTH, HEIGHT), "#e6b566")
         draw = ImageDraw.Draw(img)
 
-        draw.rectangle([0, 0, WIDTH, 90], fill="#f4d29c")
-        draw.ellipse([-100, 120, 250, 260], fill="#d89c4a")
-        draw.ellipse([150, 130, 500, 280], fill="#c98b3f")
-
-        # --- ДВИЖЕНИЕ ---
         if frame < SPIN_FRAMES:
             t = frame / SPIN_FRAMES
             ease = 1 - (1 - t) ** 3
@@ -569,109 +561,29 @@ def generate_bonus_gif():
         else:
             current_offset = final_offset
 
-        # --- ЛЕНТА ---
         for i, val in enumerate(tape):
             x = i * CELL_W - current_offset
 
             if -CELL_W < x < WIDTH:
+                draw.rectangle([x, 80, x + CELL_W, 170], fill="#b7792b")
 
-                if abs(x + CELL_W // 2 - center_x) < 5:
-                    color = "#ffcc66"
-                else:
-                    color = "#b7792b"
-
-                # карточка
-                draw.rectangle([x, 80, x + CELL_W, 170], fill=color)
-
-                # свет сверху
-                draw.rectangle([x, 80, x + CELL_W, 100], fill="#ffffff22")
-
-                # тень снизу
-                draw.rectangle([x, 150, x + CELL_W, 170], fill="#00000033")
-
-                # рамка
-                draw.rectangle(
-                    [x, 80, x + CELL_W, 170],
-                    outline="#5a3b12",
-                    width=3
-                )
-
-                # --- ТЕКСТ ПО ЦЕНТРУ ---
                 text = format_money(val)
                 bbox = font_mid.getbbox(text)
-                tw = bbox[2] - bbox[0]
-                th = bbox[3] - bbox[1]
 
-                tx = x + (CELL_W - tw) // 2
-                ty = 115 - th // 2
-
-                draw_text_pro(
-                    draw,
-                    (tx, ty),
+                draw.text(
+                    (x + (CELL_W - (bbox[2]-bbox[0])) // 2, 110),
                     text,
-                    font_mid,
-                    fill="#fff8dc",
-                    stroke_fill="#2b1600",
-                    stroke_width=2
+                    font=font_mid,
+                    fill="white"
                 )
-
-        # --- ЦЕНТР ЛИНИЯ ---
-        draw.line(
-            [(center_x, 80), (center_x, 170)],
-            fill="#ffdf00",
-            width=3
-        )
-
-        # --- GLOW (АНИМАЦИЯ) ---
-        pulse = abs((frame % 20) - 10)
-        for glow in range(4):
-            size = glow * 3 + pulse
-            draw.ellipse(
-                [
-                    center_x - 40 - size,
-                    100 - size,
-                    center_x + 40 + size,
-                    140 + size
-                ],
-                outline="#ffd700"
-            )
-
-        # --- PEDRO ---
-        text = "🌵PEDRO🌵"
-        bbox = font_big.getbbox(text)
-        tw = bbox[2] - bbox[0]
-
-        draw_text_pro(
-            draw,
-            (WIDTH // 2 - tw // 2, 10),
-            text,
-            font_big,
-            fill="#ffcc33",
-            stroke_fill="#5a2e00",
-            stroke_width=3
-        )
-
-        # --- ЭФФЕКТ ЖАРЫ ---
-        if frame % 2 == 0:
-            img = img.transform(
-                img.size,
-                Image.AFFINE,
-                (1, 0.002, 0, 0.002, 1, 0),
-                resample=Image.BICUBIC
-            )
 
         frames.append(img)
 
-    # --- СОХРАНЕНИЕ ---
+    frames = [f.convert("P", palette=Image.ADAPTIVE, colors=16) for f in frames]
+
     buffer = BytesIO()
-    frames[0].save(
-        buffer,
-        format="GIF",
-        save_all=True,
-        append_images=frames[1:],
-        duration=100,
-        loop=0
-    )
+    frames[0].save(buffer, format="GIF", save_all=True,
+                   append_images=frames[1:], duration=120, loop=0)
     buffer.seek(0)
 
     return buffer, win_bonus
@@ -713,60 +625,88 @@ async def bonus(message: types.Message):
     now = int(datetime.datetime.now().timestamp())
     last_bonus = get_last_bonus(user_id)
 
-    # ⛔ Проверка кулдауна
     if now - last_bonus < BONUS_COOLDOWN:
         remaining = BONUS_COOLDOWN - (now - last_bonus)
-
-        hours = remaining // 3600
-        minutes = (remaining % 3600) // 60
-
-        return await message.answer(
-            f"⏳ Бонус будет доступен через {hours}ч {minutes}м"
-        )
+        return await message.answer(f"⏳ {remaining//3600}ч {(remaining%3600)//60}м")
 
     try:
-        gif, amount = generate_bonus_gif()
+        if random.random() < 0.2:
 
-        file = BufferedInputFile(gif.read(), filename="bonus.gif")
-        msg = await message.answer_animation(file, caption="🎁 Крутим бонус...")
+            msg = await message.answer("🎁 Крутим бонус...")
 
-        await asyncio.sleep(10)
+            loop = asyncio.get_running_loop()
+            gif, amount = await loop.run_in_executor(executor, generate_bonus_gif)
 
-        update_balance(user_id, amount)
-        update_last_bonus(user_id)
+            file = BufferedInputFile(gif.read(), filename="bonus.gif")
 
-        new_bal = get_user(user_id, username)
+            await msg.delete()
+            msg = await message.answer_animation(file)
 
-        await msg.edit_caption(
-            caption=f"🎯 Бонус: {format_money(amount)}\n💰 Баланс: {format_money(new_bal)}"
-        )
+            async with db_lock:
+                update_balance(user_id, amount)
+                update_last_bonus(user_id)
 
-    except Exception as e:
+            new_bal = get_user(user_id, username)
+
+            await msg.edit_caption(
+                caption=f"🎯 Бонус: {format_money(amount)}\n💰 Баланс: {format_money(new_bal)}"
+            )
+        else:
+            amount = random.choice(BONUSES)
+
+            async with db_lock:
+                update_balance(user_id, amount)
+                update_last_bonus(user_id)
+
+            new_bal = get_user(user_id, username)
+
+            await message.answer(
+                f"🎯 Бонус: {format_money(amount)}\n💰 Баланс: {format_money(new_bal)}"
+            )
+
+    except:
         await message.answer("⚠️ Ошибка бонуса")
 
-def transfer_money(from_id, to_id, amount):
+async def transfer_money(from_id, to_id, amount):
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute(
-        "UPDATE users SET balance = balance - ? WHERE user_id = ?",
-        (amount, from_id)
-    )
+    try:
+        cur.execute("BEGIN IMMEDIATE")
 
-    cur.execute("SELECT user_id FROM users WHERE user_id = ?", (to_id,))
-    if cur.fetchone() is None:
+        # Проверяем баланс прямо в транзакции
+        cur.execute("SELECT balance FROM users WHERE user_id = ?", (from_id,))
+        row = cur.fetchone()
+
+        if not row or row[0] < amount:
+            conn.rollback()
+            return False
+
+        # Списываем
         cur.execute(
-            "INSERT INTO users (user_id, username, balance) VALUES (?, ?, ?)",
-            (to_id, "Игрок", amount)
-        )
-    else:
-        cur.execute(
-            "UPDATE users SET balance = balance + ? WHERE user_id = ?",
-            (amount, to_id)
+            "UPDATE users SET balance = balance - ? WHERE user_id = ?",
+            (amount, from_id)
         )
 
-    conn.commit()
-    conn.close()
+        # Проверяем получателя
+        cur.execute("SELECT user_id FROM users WHERE user_id = ?", (to_id,))
+        if cur.fetchone() is None:
+            cur.execute(
+                "INSERT OR IGNORE INTO users (user_id, username, balance) VALUES (?, ?, ?)",
+                (to_id, "Игрок", amount)
+            )
+        else:
+            cur.execute(
+                "UPDATE users SET balance = balance + ? WHERE user_id = ?",
+                (amount, to_id)
+            )
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        return False
     
 @dp.message(F.text.regexp(r"^\+\d+"))
 async def transfer_handler(message: types.Message):
